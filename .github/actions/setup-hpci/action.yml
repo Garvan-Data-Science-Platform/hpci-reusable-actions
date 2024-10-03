@@ -33,7 +33,7 @@ runs:
       uses: google-github-actions/auth@v2
       with:
         service_account: "grunner-ci-sa@${{ inputs.project_id }}.iam.gserviceaccount.com"
-        workload_identity_provider: "projects/${{ inputs.project_number }}/locations/global/workloadIdentityPools/ci-workload-identity-pool/providers/github-provider"
+        workload_identity_provider: "projects/${{ inputs.project_number }}/locations/global/workloadIdentityPools/hpci-workload-identity-pool/providers/github-provider"
 
     - name: Set up gcloud SDK
       uses: google-github-actions/setup-gcloud@v2
