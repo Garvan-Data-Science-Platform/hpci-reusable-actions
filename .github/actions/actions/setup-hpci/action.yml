@@ -1,0 +1,62 @@
+name: "Set up `hpci` on runner"
+description: "Installs and sets up hpci on a self-hosted runner"
+inputs:
+  submodule_token:
+    description: "Token for submodule access"
+    required: true
+  project_id:
+    description: "Google Cloud project ID"
+    required: true
+  project_number:
+    description: "Google Cloud project number"
+    required: true
+  registry_sa:
+    description: "Service account for Google Cloud registry"
+    required: true
+  key_prefix:
+    description: "Prefix for secret"
+    required: true
+  hpci_version:
+    description: "Version of hpci"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ inputs.submodule_token }}
+
+    - name: Authenticate to google cloud
+      uses: google-github-actions/auth@v2
+      with:
+        service_account: "grunner-ci-sa@${{ inputs.project_id }}.iam.gserviceaccount.com"
+        workload_identity_provider: "projects/${{ inputs.project_number }}/locations/global/workloadIdentityPools/ci-workload-identity-pool/providers/github-provider"
+
+    - name: Set up gcloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        version: latest
+
+    - name: Load keys on runner
+      shell: bash
+      run: |
+        gcloud secrets versions access latest --secret=${{ inputs.key_prefix }}_service_account_pub_key > access_key.pub
+        gcloud secrets versions access latest --secret=${{ inputs.key_prefix}}_service_account_private_key > access_key
+        chmod 600 access_key*
+
+    - name: Install hpci on runner
+      shell: bash
+      run: |
+        gcloud artifacts generic download \
+            --location=australia-southeast1 \
+            --project=nci-automation \
+            --name=hpci-exe \
+            --package=hpci \
+            --version=${{ inputs.hpci_version }} \
+            --destination=/usr/local/bin \
+            --repository=generic \
+            --impersonate-service-account=${{ inputs.registry_sa }}
+        chmod +x /usr/local/bin/hpci-exe
