@@ -57,6 +57,5 @@ runs:
             --package=hpci \
             --version=${{ inputs.hpci_version }} \
             --destination=/usr/local/bin \
-            --repository=generic \
-            --impersonate-service-account=${{ inputs.registry_sa }}
+            --repository=generic
         chmod +x /usr/local/bin/hpci-exe
